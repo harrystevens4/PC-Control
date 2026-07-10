@@ -22,13 +22,13 @@
                 android:textAppearance="@android:style/TextAppearance.Material.Medium" />
 
             <Button
-                android:id="@+id/mediaPlayButton"
+                android:id="@+id/lockButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="play" />
 
             <Button
-                android:id="@+id/mediaPauseButton"
+                android:id="@+id/unlockButton"
                 android:layout_width="match_parent"
                 android:layout_height="wrap_content"
                 android:text="pause" />

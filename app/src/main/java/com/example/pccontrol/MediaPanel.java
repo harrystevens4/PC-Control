@@ -8,7 +8,7 @@ import android.widget.RemoteViews;
 /**
  * Implementation of App Widget functionality.
  */
-public class panel extends AppWidgetProvider {
+public class MediaPanel extends AppWidgetProvider {
 
     @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
@@ -33,7 +33,7 @@ public class panel extends AppWidgetProvider {
 
         CharSequence widgetText = context.getString(R.string.appwidget_text);
         // Construct the RemoteViews object
-        RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.panel);
+        RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.media_panel);
         //views.setTextViewText(R.id.appwidget_text, widgetText);
 
         // Instruct the widget manager to update the widget

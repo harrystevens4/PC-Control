@@ -2,5 +2,7 @@
     <string name="app_name">PC Control</string>
     <string name="appwidget_text">nothing here</string>
     <string name="add_widget">Add widget</string>
-    <string name="app_widget_description">Widget for PC Control</string>
+    <string name="media_panel_description">Controls PC Media</string>
+    <string name="app_widget_description">This is an app widget description</string>
+    <string name="power_widget_description">Controls PC Power</string>
 </resources>
