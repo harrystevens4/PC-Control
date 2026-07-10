@@ -32,14 +32,25 @@ public class RemoteAction extends Service {
     @Override
     public int onStartCommand(Intent intent, int flags, int startId){
         Log.d("RemoteAction","RemoteAction for "+" requested");
-        thread_pool.execute(new RemoteUnlock());
+        thread_pool.execute(new RemoteUnlock(this));
         return START_NOT_STICKY;
     }
 }
 
 class RemoteUnlock implements Runnable {
+    private Service service = null;
+    public RemoteUnlock(Service caller){
+        this.service = caller;
+    }
     @Override
     public void run(){
         Log.d("RemoteAction","initiating remote unlock");
+        try {
+            Thread.sleep(1000);
+        } catch (InterruptedException e) {
+            throw new RuntimeException(e);
+        }
+        Log.d("RemoteAction","remote unlock complete");
+        service.stopSelf();
     }
 }

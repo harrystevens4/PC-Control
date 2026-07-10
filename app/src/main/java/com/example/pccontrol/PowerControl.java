@@ -33,7 +33,7 @@ public class PowerControl extends AppWidgetProvider {
         //set button callbacks
         int unlock_button_id = R.id.unlockButton;//views.getLayoutId();
         Intent unlock_intent = new Intent(context, RemoteAction.class);
-        PendingIntent pending_unlock_intent = PendingIntent.getService(context,0,unlock_intent,PendingIntent.FLAG_ONE_SHOT | PendingIntent.FLAG_IMMUTABLE);
+        PendingIntent pending_unlock_intent = PendingIntent.getService(context,0,unlock_intent,PendingIntent.FLAG_IMMUTABLE);
         views.setOnClickPendingIntent(unlock_button_id,pending_unlock_intent);
 
         // Instruct the widget manager to update the widget
