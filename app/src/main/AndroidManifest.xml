@@ -45,15 +45,9 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity
-            android:name=".RemoteAction"
-            android:exported="true"
-            android:label="remote_action"
-            android:theme="@style/Theme.PCControl">
-            <intent-filter>
-                <action android:name="android.intent.action.MAIN" />
-            </intent-filter>
-        </activity>
+        <service
+            android:description="@string/remote_action_service_description"
+            android:name=".RemoteAction"/>
     </application>
 
 </manifest>
