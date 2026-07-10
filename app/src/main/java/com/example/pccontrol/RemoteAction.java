@@ -15,6 +15,12 @@ import android.util.Log;
 import androidx.activity.ComponentActivity;
 import androidx.appcompat.app.AppCompatActivity;
 
+import java.io.IOException;
+import java.io.InputStream;
+import java.io.OutputStream;
+import java.net.Socket;
+import java.net.UnknownHostException;
+import java.nio.ByteBuffer;
 import java.util.concurrent.ExecutorService;
 
 public class RemoteAction extends Service {
@@ -43,14 +49,41 @@ class RemoteUnlock implements Runnable {
         this.service = caller;
     }
     @Override
-    public void run(){
-        Log.d("RemoteAction","initiating remote unlock");
+    public void run() {
+        Log.d("RemoteAction", "initiating remote unlock");
+        String computer_hostname = "harry-desktop.local";
+        Socket socket;
+        OutputStream socket_output;
+        InputStream socket_input;
+        //====== open socket ======
         try {
-            Thread.sleep(1000);
-        } catch (InterruptedException e) {
+            socket = new Socket(computer_hostname, 19532);
+            socket_output = socket.getOutputStream();
+            socket_input = socket.getInputStream();
+        } catch (UnknownHostException e) {
+            Log.e("RemoteAction", "Could not find host");
+            return;
+        } catch (IOException e) {
             throw new RuntimeException(e);
         }
-        Log.d("RemoteAction","remote unlock complete");
-        service.stopSelf();
+        try {
+            ByteBuffer buffer = ByteBuffer.allocate(64);
+            //====== auth_request ======
+            long action = 0; //unlock
+            buffer.putLong(action);
+            socket_output.write(buffer.array(),0,8);
+            //====== auth_challenge ======
+            socket_input.read(buffer.array(),0,64);
+            //====== auth_response ======
+            //====== request_status ======
+            //====== close socket ======
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        } finally {
+            try {
+                socket.close();
+            } catch (IOException ignored){}
+        }
+        Log.d("RemoteAction", "remote unlock complete");
     }
 }
