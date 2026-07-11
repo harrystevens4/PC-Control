@@ -1,9 +1,12 @@
 package com.example.pccontrol;
 
+import static androidx.core.content.ContextCompat.getSystemService;
 import static java.util.concurrent.Executors.newCachedThreadPool;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 
 import android.app.Activity;
+import android.app.Notification;
+import android.app.NotificationManager;
 import android.app.Service;
 import android.content.BroadcastReceiver;
 import android.content.Context;
@@ -14,10 +17,13 @@ import android.util.Log;
 
 import androidx.activity.ComponentActivity;
 import androidx.appcompat.app.AppCompatActivity;
+import androidx.core.app.NotificationCompat;
+import androidx.core.graphics.drawable.IconCompat;
 
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.net.ConnectException;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
@@ -63,8 +69,16 @@ class RemoteUnlock implements Runnable {
             socket = new Socket(computer_hostname, 19532);
             socket_output = socket.getOutputStream();
             socket_input = socket.getInputStream();
-        } catch (UnknownHostException e) {
-            Log.e("RemoteAction", "Could not find host");
+        } catch (UnknownHostException | ConnectException e) {
+            Log.e("RemoteAction", "Could not connect to host");
+            Notification.Builder notification_builder =  new Notification.Builder(this.service,"ErrorChannel")
+                    .setSmallIcon(R.mipmap.ic_launcher)
+                    .setContentTitle("Unlocking error")
+                    .setContentText("Couldn't connect to host "+computer_hostname)
+                    .setVisibility(Notification.VISIBILITY_PUBLIC)
+                    .setAutoCancel(true);
+            NotificationManager notification_manager = this.service.getSystemService(NotificationManager.class);
+            notification_manager.notify(0,notification_builder.build());
             return;
         } catch (IOException e) {
             throw new RuntimeException(e);

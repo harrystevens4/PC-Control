@@ -1,5 +1,7 @@
 package com.example.pccontrol;
 
+import android.app.NotificationChannel;
+import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
@@ -20,10 +22,6 @@ import androidx.core.content.ContextCompat;
  * Implementation of App Widget functionality.
  */
 public class PowerControl extends AppWidgetProvider {
-    public void unlockButtonHandler(View view){
-        Log.d("INFO","unlock requested");
-    }
-
     static void updateAppWidget(Context context, AppWidgetManager appWidgetManager,
                                 int appWidgetId) {
 
