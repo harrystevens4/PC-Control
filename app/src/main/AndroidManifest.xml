@@ -48,9 +48,6 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <service
-            android:description="@string/remote_action_service_description"
-            android:name=".RemoteAction"/>
     </application>
 
 </manifest>
