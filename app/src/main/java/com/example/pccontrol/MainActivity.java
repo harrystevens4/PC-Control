@@ -19,6 +19,8 @@ public class MainActivity extends Activity {
         notification_channel.enableLights(true);
         NotificationManager notification_manager = this.getSystemService(NotificationManager.class);
         notification_manager.createNotificationChannel(notification_channel);
+        //build ui
+        setContentView(R.layout.main_activity);
     }
     public static Context getAppContext(){
         return app.getApplicationContext();
