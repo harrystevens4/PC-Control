@@ -21,6 +21,8 @@ import java.io.OutputStream;
 import java.net.Socket;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
+import java.security.MessageDigest;
+import java.security.NoSuchAlgorithmException;
 import java.util.concurrent.ExecutorService;
 
 public class RemoteAction extends Service {
@@ -52,6 +54,7 @@ class RemoteUnlock implements Runnable {
     public void run() {
         Log.d("RemoteAction", "initiating remote unlock");
         String computer_hostname = "harry-desktop.local";
+        byte[] secret_key = "awesome test secret key".getBytes();
         Socket socket;
         OutputStream socket_output;
         InputStream socket_input;
@@ -75,10 +78,23 @@ class RemoteUnlock implements Runnable {
             //====== auth_challenge ======
             socket_input.read(buffer.array(),0,64);
             //====== auth_response ======
+            ByteBuffer bytes_to_digest = ByteBuffer.allocate(64+secret_key.length);
+            bytes_to_digest.put(buffer.array(),0,64);
+            bytes_to_digest.put(secret_key);
+            MessageDigest md = MessageDigest.getInstance("sha256");
+            byte[] digest = md.digest(bytes_to_digest.array());
+            socket_output.write(digest);
             //====== request_status ======
+            byte[] status_buffer = {0};
+            socket_input.read(status_buffer,0,1);
+            int status = Byte.toUnsignedInt(status_buffer[0]);
+            Log.d("RemoteAction","status returned of "+status);
             //====== close socket ======
         } catch (IOException e) {
             throw new RuntimeException(e);
+        } catch (NoSuchAlgorithmException ignored){
+            Log.e("RemoteAction","sha256 not available");
+            return;
         } finally {
             try {
                 socket.close();
