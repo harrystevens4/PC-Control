@@ -1,9 +1,6 @@
 <resources>
     <string name="app_name">PC Control</string>
-    <string name="appwidget_text">nothing here</string>
     <string name="add_widget">Add widget</string>
-    <string name="media_panel_description">Controls PC Media</string>
     <string name="app_widget_description">This is an app widget description</string>
-    <string name="power_widget_description">Controls PC Power</string>
-    <string name="remote_action_service_description">Service to perform remote actions on a computer on the network</string>
+    <string name="power_widget_description">Controls PC</string>
 </resources>

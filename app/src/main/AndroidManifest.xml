@@ -15,7 +15,7 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.PCControl">
         <receiver
-            android:name=".PowerControl"
+            android:name=".RemoteActionsWidget"
             android:exported="false">
             <intent-filter>
                 <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
@@ -24,18 +24,7 @@
 
             <meta-data
                 android:name="android.appwidget.provider"
-                android:resource="@xml/power_control_info" />
-        </receiver>
-        <receiver
-            android:name=".MediaPanel"
-            android:exported="false">
-            <intent-filter>
-                <action android:name="android.appwidget.action.APPWIDGET_UPDATE" />
-            </intent-filter>
-
-            <meta-data
-                android:name="android.appwidget.provider"
-                android:resource="@xml/panel_info" />
+                android:resource="@xml/remote_actions_info" />
         </receiver>
         <activity
             android:name=".MainActivity"

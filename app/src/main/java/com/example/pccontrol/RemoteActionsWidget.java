@@ -3,24 +3,14 @@ package com.example.pccontrol;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 
 import android.app.Notification;
-import android.app.NotificationChannel;
 import android.app.NotificationManager;
 import android.app.PendingIntent;
-import android.app.Service;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
-import android.content.BroadcastReceiver;
 import android.content.Context;
 import android.content.Intent;
-import android.content.IntentFilter;
-import android.net.Uri;
-import android.text.BoringLayout;
 import android.util.Log;
-import android.view.View;
-import android.widget.Button;
 import android.widget.RemoteViews;
-
-import androidx.core.content.ContextCompat;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -37,19 +27,17 @@ import java.util.concurrent.ExecutorService;
 /**
  * Implementation of App Widget functionality.
  */
-public class PowerControl extends AppWidgetProvider {
+public class RemoteActionsWidget extends AppWidgetProvider {
     private final ExecutorService thread_pool = newSingleThreadExecutor();
     static void updateAppWidget(Context context, AppWidgetManager appWidgetManager,
                                 int appWidgetId) {
-        //create thread pool for handling requests
 
-        CharSequence widgetText = context.getString(R.string.appwidget_text);
         // Construct the RemoteViews object
-        RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.power_control);
+        RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.remote_actions);
         //set button callbacks
         int unlock_button_id = R.id.unlockButton;
 
-        Intent unlock_intent = new Intent(context, PowerControl.class);
+        Intent unlock_intent = new Intent(context, RemoteActionsWidget.class);
         unlock_intent.setAction("UNLOCK_ACTION");
 
         PendingIntent pending_unlock_intent = PendingIntent.getBroadcast(context,0,unlock_intent,PendingIntent.FLAG_IMMUTABLE);
@@ -65,7 +53,7 @@ public class PowerControl extends AppWidgetProvider {
     public void onReceive(Context context, Intent intent){
         if (Objects.equals(intent.getAction(), "UNLOCK_ACTION")) {
             Log.d("PowerControl", "intent received: " + intent);
-            thread_pool.execute(new RemoteUnlock(context));
+            thread_pool.execute(new RemoteAction(context,0));
         }
         super.onReceive(context,intent);
     }
@@ -89,10 +77,12 @@ public class PowerControl extends AppWidgetProvider {
     }
 }
 
-class RemoteUnlock implements Runnable {
+class RemoteAction implements Runnable {
     private Context service = null;
-    public RemoteUnlock(Context caller){
+    private int action = 0;
+    public RemoteAction(Context caller,int action){
         this.service = caller;
+        this.action = action;
     }
     @Override
     public void run() {
@@ -124,8 +114,7 @@ class RemoteUnlock implements Runnable {
         try {
             ByteBuffer buffer = ByteBuffer.allocate(64);
             //====== auth_request ======
-            long action = 0; //unlock
-            buffer.putLong(action);
+            buffer.putLong(this.action);
             socket_output.write(buffer.array(),0,8);
             //====== auth_challenge ======
             socket_input.read(buffer.array(),0,64);
