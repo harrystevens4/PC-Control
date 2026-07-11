@@ -9,6 +9,9 @@ import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
 import android.content.Context;
 import android.content.Intent;
+import android.content.SharedPreferences;
+import android.net.wifi.hotspot2.pps.Credential;
+import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.RemoteViews;
 
@@ -21,6 +24,7 @@ import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.util.Base64;
 import java.util.Objects;
 import java.util.concurrent.ExecutorService;
 
@@ -78,35 +82,49 @@ public class RemoteActionsWidget extends AppWidgetProvider {
 }
 
 class RemoteAction implements Runnable {
-    private Context service = null;
+    private Context caller = null;
     private int action = 0;
     public RemoteAction(Context caller,int action){
-        this.service = caller;
+        this.caller = caller;
         this.action = action;
+    }
+    private void notify_error(String message){
+        Notification.Builder notification_builder =  new Notification.Builder(this.caller,"ErrorChannel")
+                .setSmallIcon(R.mipmap.ic_launcher)
+                .setContentTitle("Error")
+                .setContentText(message)
+                .setVisibility(Notification.VISIBILITY_PUBLIC)
+                .setAutoCancel(true);
+        NotificationManager notification_manager = this.caller.getSystemService(NotificationManager.class);
+        notification_manager.notify(0,notification_builder.build());
     }
     @Override
     public void run() {
         Log.d("RemoteAction", "initiating remote unlock");
-        String computer_hostname = "harry-desktop.local";
-        byte[] secret_key = "awesome test secret key".getBytes();
+        //====== get computer hostname and secret key ======
+        SharedPreferences remote_action_config = this.caller.getSharedPreferences("remote_action_config", Context.MODE_PRIVATE);
+        String computer_hostname = remote_action_config.getString("computer_hostname","");
+        if (Objects.equals(computer_hostname,"")) {
+            this.notify_error("computer hostname not set");
+            return;
+        }
+        String secret_key_base64 = remote_action_config.getString("secret_key","");
+        if (Objects.equals(secret_key_base64,"")) {
+            this.notify_error("secret key not set");
+            return;
+        }
+        byte[] secret_key = Base64.getDecoder().decode(secret_key_base64);
+        //====== open socket ======
         Socket socket;
         OutputStream socket_output;
         InputStream socket_input;
-        //====== open socket ======
         try {
             socket = new Socket(computer_hostname, 19532);
             socket_output = socket.getOutputStream();
             socket_input = socket.getInputStream();
         } catch (UnknownHostException | ConnectException e) {
             Log.e("RemoteAction", "Could not connect to host");
-            Notification.Builder notification_builder =  new Notification.Builder(this.service,"ErrorChannel")
-                    .setSmallIcon(R.mipmap.ic_launcher)
-                    .setContentTitle("Unlocking error")
-                    .setContentText("Couldn't connect to host "+computer_hostname)
-                    .setVisibility(Notification.VISIBILITY_PUBLIC)
-                    .setAutoCancel(true);
-            NotificationManager notification_manager = this.service.getSystemService(NotificationManager.class);
-            notification_manager.notify(0,notification_builder.build());
+            this.notify_error("Couldn't connect to host "+computer_hostname);
             return;
         } catch (IOException e) {
             throw new RuntimeException(e);

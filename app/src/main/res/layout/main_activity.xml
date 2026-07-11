@@ -8,6 +8,35 @@
 
     <LinearLayout
         android:layout_width="match_parent"
+        android:layout_height="158dp"
+        android:background="@drawable/layout_border"
+        android:gravity="center"
+        android:orientation="vertical"
+        android:translationY="40dp">
+
+        <TextView
+            android:id="@+id/computer_hostname_label"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="computer hostname" />
+
+        <EditText
+            android:id="@+id/computer_hostname_text_entry"
+            android:layout_width="match_parent"
+            android:layout_height="68dp"
+            android:ems="10"
+            android:inputType="text|textNoSuggestions" />
+
+        <Button
+            android:id="@+id/computer_hostname_save_button"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="save" />
+
+    </LinearLayout>
+
+    <LinearLayout
+        android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:background="@drawable/layout_border"
         android:gravity="center"
@@ -15,10 +44,10 @@
         android:translationY="40dp">
 
         <TextView
-            android:id="@+id/textView2"
+            android:id="@+id/secret_key_label"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="base32 secret key" />
+            android:text="base64 secret key" />
 
         <EditText
             android:id="@+id/secret_key_text_entry"
