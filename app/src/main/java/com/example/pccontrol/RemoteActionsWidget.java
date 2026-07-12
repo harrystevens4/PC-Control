@@ -38,14 +38,17 @@ public class RemoteActionsWidget extends AppWidgetProvider {
 
         // Construct the RemoteViews object
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.remote_actions);
-        //set button callbacks
-        int unlock_button_id = R.id.unlockButton;
 
+        //set button callbacks
         Intent unlock_intent = new Intent(context, RemoteActionsWidget.class);
         unlock_intent.setAction("UNLOCK_ACTION");
+        Intent lock_intent = new Intent(context, RemoteActionsWidget.class);
+        lock_intent.setAction("LOCK_ACTION");
 
         PendingIntent pending_unlock_intent = PendingIntent.getBroadcast(context,0,unlock_intent,PendingIntent.FLAG_IMMUTABLE);
-        views.setOnClickPendingIntent(unlock_button_id,pending_unlock_intent);
+        PendingIntent pending_lock_intent = PendingIntent.getBroadcast(context,0,lock_intent,PendingIntent.FLAG_IMMUTABLE);
+        views.setOnClickPendingIntent(R.id.unlockButton,pending_unlock_intent);
+        views.setOnClickPendingIntent(R.id.lockButton,pending_lock_intent);
 
         // Instruct the widget manager to update the widget
         appWidgetManager.updateAppWidget(appWidgetId, views);
@@ -58,6 +61,10 @@ public class RemoteActionsWidget extends AppWidgetProvider {
         if (Objects.equals(intent.getAction(), "UNLOCK_ACTION")) {
             Log.d("PowerControl", "intent received: " + intent);
             thread_pool.execute(new RemoteAction(context,0));
+        }
+        if (Objects.equals(intent.getAction(), "LOCK_ACTION")) {
+            Log.d("PowerControl", "intent received: " + intent);
+            thread_pool.execute(new RemoteAction(context,1));
         }
         super.onReceive(context,intent);
     }
@@ -100,7 +107,7 @@ class RemoteAction implements Runnable {
     }
     @Override
     public void run() {
-        Log.d("RemoteAction", "initiating remote unlock");
+        Log.d("RemoteAction", "initiating remote connection");
         //====== get computer hostname and secret key ======
         SharedPreferences remote_action_config = this.caller.getSharedPreferences("remote_action_config", Context.MODE_PRIVATE);
         String computer_hostname = remote_action_config.getString("computer_hostname","");
