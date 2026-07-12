@@ -148,6 +148,15 @@ class RemoteAction implements Runnable {
             socket_input.read(status_buffer,0,1);
             int status = Byte.toUnsignedInt(status_buffer[0]);
             Log.d("RemoteAction","status returned of "+status);
+            if (status != 0) {
+                String text_status = "";
+                if (status == 1){
+                    text_status = "authentication failed";
+                }else{
+                    text_status = "code "+status;
+                }
+                notify_error("Error performing action: "+text_status);
+            }
             //====== close socket ======
         } catch (IOException e) {
             throw new RuntimeException(e);
