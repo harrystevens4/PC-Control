@@ -20,6 +20,7 @@ import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.ConnectException;
 import java.net.Socket;
+import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.security.MessageDigest;
@@ -140,31 +141,34 @@ class RemoteAction implements Runnable {
             ByteBuffer buffer = ByteBuffer.allocate(64);
             //====== auth_request ======
             buffer.putLong(this.action);
-            socket_output.write(buffer.array(),0,8);
+            socket_output.write(buffer.array(), 0, 8);
             //====== auth_challenge ======
-            socket_input.read(buffer.array(),0,64);
+            socket_input.read(buffer.array(), 0, 64);
             //====== auth_response ======
-            ByteBuffer bytes_to_digest = ByteBuffer.allocate(64+secret_key.length);
-            bytes_to_digest.put(buffer.array(),0,64);
+            ByteBuffer bytes_to_digest = ByteBuffer.allocate(64 + secret_key.length);
+            bytes_to_digest.put(buffer.array(), 0, 64);
             bytes_to_digest.put(secret_key);
             MessageDigest md = MessageDigest.getInstance("sha256");
             byte[] digest = md.digest(bytes_to_digest.array());
             socket_output.write(digest);
             //====== request_status ======
             byte[] status_buffer = {0};
-            socket_input.read(status_buffer,0,1);
+            socket_input.read(status_buffer, 0, 1);
             int status = Byte.toUnsignedInt(status_buffer[0]);
-            Log.d("RemoteAction","status returned of "+status);
+            Log.d("RemoteAction", "status returned of " + status);
             if (status != 0) {
                 String text_status = "";
-                if (status == 1){
+                if (status == 1) {
                     text_status = "authentication failed";
-                }else{
-                    text_status = "code "+status;
+                } else {
+                    text_status = "code " + status;
                 }
-                notify_error("Error performing action: "+text_status);
+                notify_error("Error performing action: " + text_status);
             }
             //====== close socket ======
+        } catch (SocketException e){
+            this.notify_error("Socket transport error: "+e.getMessage());
+            return;
         } catch (IOException e) {
             throw new RuntimeException(e);
         } catch (NoSuchAlgorithmException ignored){
