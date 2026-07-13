@@ -12,8 +12,8 @@
         android:icon="@mipmap/ic_launcher"
         android:label="@string/app_name"
         android:roundIcon="@mipmap/ic_launcher_round"
-        android:supportsRtl="true"
-        android:theme="@style/Theme.PCControl">
+        android:theme="@style/Theme.Material3.DynamicColors.Dark.NoActionBar"
+        android:supportsRtl="true">
         <receiver
             android:name=".RemoteActionsWidget"
             android:exported="false">
@@ -29,8 +29,7 @@
         <activity
             android:name=".MainActivity"
             android:exported="true"
-            android:label="@string/app_name"
-            android:theme="@style/Theme.PCControl">
+            android:label="@string/app_name">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

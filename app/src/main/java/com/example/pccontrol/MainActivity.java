@@ -11,24 +11,26 @@ import android.view.View;
 import android.widget.Button;
 import android.widget.EditText;
 
+import com.google.android.material.color.DynamicColors;
+
 public class MainActivity extends Activity {
-    private static Activity app;
+
     @Override
     public void onCreate(Bundle saved_instance_state){
         super.onCreate(saved_instance_state);
-        MainActivity.app = this;
         //setup notification channel
         NotificationChannel notification_channel = new NotificationChannel("ErrorChannel","Errors", NotificationManager.IMPORTANCE_HIGH);
         notification_channel.enableVibration(true);
         notification_channel.enableLights(true);
         NotificationManager notification_manager = this.getSystemService(NotificationManager.class);
         notification_manager.createNotificationChannel(notification_channel);
-        //retreive config values
+        //retrieve config values
         SharedPreferences remote_action_config = this.getSharedPreferences("remote_action_config", Context.MODE_PRIVATE);
         SharedPreferences.Editor remote_action_config_editor = remote_action_config.edit();
         String computer_hostname = remote_action_config.getString("computer_hostname","");
         String secret_key = remote_action_config.getString("secret_key","");
         //build ui
+        DynamicColors.applyToActivitiesIfAvailable(this.getApplication());
         setContentView(R.layout.main_activity);
         EditText computer_hostname_text_entry = (EditText)findViewById(R.id.computer_hostname_text_entry);
         computer_hostname_text_entry.setText(computer_hostname);
@@ -52,8 +54,5 @@ public class MainActivity extends Activity {
             }
         });
 
-    }
-    public static Context getAppContext(){
-        return app.getApplicationContext();
     }
 }

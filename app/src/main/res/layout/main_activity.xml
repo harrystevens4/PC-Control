@@ -2,7 +2,7 @@
 <LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@color/material_dynamic_neutral_variant20"
+    android:background="?android:attr/colorBackground"
     android:gravity="center_horizontal"
     android:orientation="vertical">
 
@@ -18,7 +18,8 @@
             android:id="@+id/computer_hostname_label"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:text="computer hostname" />
+            android:text="computer hostname"
+            android:textColor="?android:attr/colorAccent" />
 
         <EditText
             android:id="@+id/computer_hostname_text_entry"
