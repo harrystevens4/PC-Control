@@ -1,35 +1,45 @@
 <RelativeLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent">
 
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
+        android:background="@color/cardview_dark_background"
+        android:divider="@android:drawable/divider_horizontal_bright"
         android:orientation="vertical">
 
-        <LinearLayout
+        <TextView
+            android:id="@+id/mediaTitle"
             android:layout_width="match_parent"
-            android:layout_height="match_parent"
-            android:orientation="vertical">
+            android:layout_height="wrap_content"
+            android:padding="10dp"
+            android:text="Locking"
+            android:textAlignment="center"
+            android:textAppearance="@android:style/TextAppearance.Material.Medium"
+            android:textColor="@color/material_dynamic_neutral70" />
 
-            <TextView
-                android:id="@+id/mediaTitle"
-                android:layout_width="match_parent"
-                android:layout_height="42dp"
-                android:text="Locking"
-                android:textAppearance="@android:style/TextAppearance.Material.Medium" />
+        <Button
+            android:id="@+id/lockButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="5dp"
+            android:background="@color/material_dynamic_neutral20"
+            android:text="lock"
+            android:textColor="@color/material_dynamic_primary60"
+            android:textFontWeight="500" />
 
-            <Button
-                android:id="@+id/lockButton"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="lock" />
-
-            <Button
-                android:id="@+id/unlockButton"
-                android:layout_width="match_parent"
-                android:layout_height="wrap_content"
-                android:text="unlock" />
-        </LinearLayout>
+        <Button
+            android:id="@+id/unlockButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_margin="5dp"
+            android:background="@color/material_dynamic_neutral20"
+            android:text="unlock"
+            android:textColor="@color/material_dynamic_primary60"
+            android:textFontWeight="500" />
     </LinearLayout>
+
 </RelativeLayout>
