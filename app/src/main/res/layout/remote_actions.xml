@@ -40,6 +40,24 @@
             android:text="unlock"
             android:textColor="@color/material_dynamic_primary60"
             android:textFontWeight="500" />
+
+        <TextView
+            android:id="@+id/powerLabel"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:paddingVertical="10dp"
+            android:text="Power"
+            android:textAlignment="center"
+            android:textAppearance="@style/TextAppearance.AppCompat.Medium"
+            android:textColor="@color/material_dynamic_neutral70" />
+
+        <Button
+            android:id="@+id/powerOffButton"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:background="@color/material_dynamic_neutral20"
+            android:text="power off"
+            android:textColor="@color/material_dynamic_primary60" />
     </LinearLayout>
 
 </RelativeLayout>

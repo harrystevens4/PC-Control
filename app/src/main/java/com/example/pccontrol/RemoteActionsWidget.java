@@ -1,5 +1,6 @@
 package com.example.pccontrol;
 
+import static android.appwidget.AppWidgetManager.EXTRA_APPWIDGET_ID;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 
 import android.app.Notification;
@@ -10,8 +11,6 @@ import android.appwidget.AppWidgetProvider;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
-import android.net.wifi.hotspot2.pps.Credential;
-import android.preference.PreferenceManager;
 import android.util.Log;
 import android.widget.RemoteViews;
 
@@ -27,6 +26,8 @@ import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 import java.util.Base64;
 import java.util.Objects;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.concurrent.ExecutorService;
 
 /**
@@ -34,9 +35,10 @@ import java.util.concurrent.ExecutorService;
  */
 public class RemoteActionsWidget extends AppWidgetProvider {
     private final ExecutorService thread_pool = newSingleThreadExecutor();
+    private static int shutdown_button_confirmation_stage = 0;
     static void updateAppWidget(Context context, AppWidgetManager appWidgetManager,
                                 int appWidgetId) {
-
+        Log.d("RemoteActionsWidget","updateAppWidget id "+appWidgetId);
         // Construct the RemoteViews object
         RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.remote_actions);
 
@@ -45,11 +47,13 @@ public class RemoteActionsWidget extends AppWidgetProvider {
         unlock_intent.setAction("UNLOCK_ACTION");
         Intent lock_intent = new Intent(context, RemoteActionsWidget.class);
         lock_intent.setAction("LOCK_ACTION");
+        Intent shutdown_intent = new Intent(context, RemoteActionsWidget.class);
+        shutdown_intent.setAction("SHUTDOWN_ACTION");
+        shutdown_intent.putExtra(EXTRA_APPWIDGET_ID,appWidgetId);
 
-        PendingIntent pending_unlock_intent = PendingIntent.getBroadcast(context,0,unlock_intent,PendingIntent.FLAG_IMMUTABLE);
-        PendingIntent pending_lock_intent = PendingIntent.getBroadcast(context,0,lock_intent,PendingIntent.FLAG_IMMUTABLE);
-        views.setOnClickPendingIntent(R.id.unlockButton,pending_unlock_intent);
-        views.setOnClickPendingIntent(R.id.lockButton,pending_lock_intent);
+        views.setOnClickPendingIntent(R.id.unlockButton,PendingIntent.getBroadcast(context,0,unlock_intent,PendingIntent.FLAG_IMMUTABLE));
+        views.setOnClickPendingIntent(R.id.lockButton,PendingIntent.getBroadcast(context,0,lock_intent,PendingIntent.FLAG_IMMUTABLE));
+        views.setOnClickPendingIntent(R.id.powerOffButton,PendingIntent.getBroadcast(context,0,shutdown_intent,PendingIntent.FLAG_IMMUTABLE));
 
         // Instruct the widget manager to update the widget
         appWidgetManager.updateAppWidget(appWidgetId, views);
@@ -59,13 +63,45 @@ public class RemoteActionsWidget extends AppWidgetProvider {
 
     @Override
     public void onReceive(Context context, Intent intent){
+        int app_widget_id = intent.getIntExtra(EXTRA_APPWIDGET_ID,0);
         if (Objects.equals(intent.getAction(), "UNLOCK_ACTION")) {
-            Log.d("PowerControl", "intent received: " + intent);
             thread_pool.execute(new RemoteAction(context,0));
         }
         if (Objects.equals(intent.getAction(), "LOCK_ACTION")) {
-            Log.d("PowerControl", "intent received: " + intent);
             thread_pool.execute(new RemoteAction(context,1));
+        }
+        if (Objects.equals(intent.getAction(), "SHUTDOWN_ACTION")) {
+            shutdown_button_confirmation_stage++;
+            RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.remote_actions);
+            AppWidgetManager app_widget_manager = AppWidgetManager.getInstance(context);
+            String[] confirmation_texts = {"confirm?","confirm!"};
+            //schedule confirmation stage reset
+            if (shutdown_button_confirmation_stage == 1){
+                TimerTask reset_shutdown_confirmation_timer_task = new TimerTask() {
+                    @Override public void run(){
+                        shutdown_button_confirmation_stage = 0;
+                        views.setTextViewText(R.id.powerOffButton, "shutdown");
+                        app_widget_manager.partiallyUpdateAppWidget(app_widget_id,views);
+                    }
+                };
+                Timer timer = new Timer(true);
+                timer.schedule(reset_shutdown_confirmation_timer_task,3000);
+            }
+            //handle confirmation stages
+            if (shutdown_button_confirmation_stage < confirmation_texts.length+1) {
+                Log.d("RemoteActionsWidget","power off confirmation stage "+shutdown_button_confirmation_stage);
+                //change text to next stage of confirmation
+                views.setTextViewText(R.id.powerOffButton, confirmation_texts[shutdown_button_confirmation_stage-1]);
+                app_widget_manager.partiallyUpdateAppWidget(app_widget_id,views);
+            }else {
+                Log.d("RemoteActionsWidget","power off requested");
+                //execute shutdown and reset label
+                thread_pool.execute(new RemoteAction(context,2));
+                //reset text
+                shutdown_button_confirmation_stage = 0;
+                views.setTextViewText(R.id.powerOffButton, "shutdown");
+                app_widget_manager.partiallyUpdateAppWidget(app_widget_id,views);
+            }
         }
         super.onReceive(context,intent);
     }
@@ -160,6 +196,8 @@ class RemoteAction implements Runnable {
                 String text_status = "";
                 if (status == 1) {
                     text_status = "authentication failed";
+                } else if (status == 2){
+                    text_status = "command not implemented";
                 } else {
                     text_status = "code " + status;
                 }
