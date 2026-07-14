@@ -134,7 +134,7 @@ class RemoteAction implements Runnable {
     }
     private void notify_error(String message){
         Notification.Builder notification_builder =  new Notification.Builder(this.caller,"ErrorChannel")
-                .setSmallIcon(R.mipmap.ic_launcher)
+                .setSmallIcon(R.mipmap.pccontrol_icon)
                 .setContentTitle("Error")
                 .setContentText(message)
                 .setVisibility(Notification.VISIBILITY_PUBLIC)
