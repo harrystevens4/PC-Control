@@ -55,6 +55,7 @@
             android:id="@+id/powerOffButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
+            android:layout_margin="5dp"
             android:background="@color/material_dynamic_neutral20"
             android:text="power off"
             android:textColor="@color/material_dynamic_primary60" />
