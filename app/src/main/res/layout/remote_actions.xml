@@ -7,35 +7,37 @@
     <LinearLayout
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:background="@color/cardview_dark_background"
+        android:layout_marginTop="10dp"
+        android:background="@android:color/system_background_dark"
         android:divider="@android:drawable/divider_horizontal_bright"
         android:orientation="vertical">
 
         <TextView
-            android:id="@+id/mediaTitle"
+            android:id="@+id/lockingLabel"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
             android:padding="10dp"
             android:text="Locking"
             android:textAlignment="center"
             android:textAppearance="@android:style/TextAppearance.Material.Medium"
-            android:textColor="@color/material_dynamic_neutral70" />
+            android:textColor="@color/material_dynamic_neutral70"
+            android:visibility="gone" />
 
         <Button
             android:id="@+id/lockButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="5dp"
+            android:layout_margin="10dp"
             android:background="@color/material_dynamic_neutral20"
+            android:paddingTop="10dp"
             android:text="lock"
-            android:textColor="@color/material_dynamic_primary60"
-            android:textFontWeight="500" />
+            android:textColor="@color/material_dynamic_primary60" />
 
         <Button
             android:id="@+id/unlockButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="5dp"
+            android:layout_margin="10dp"
             android:background="@color/material_dynamic_neutral20"
             android:text="unlock"
             android:textColor="@color/material_dynamic_primary60"
@@ -49,13 +51,14 @@
             android:text="Power"
             android:textAlignment="center"
             android:textAppearance="@style/TextAppearance.AppCompat.Medium"
-            android:textColor="@color/material_dynamic_neutral70" />
+            android:textColor="@color/material_dynamic_neutral70"
+            android:visibility="gone" />
 
         <Button
             android:id="@+id/powerOffButton"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:layout_margin="5dp"
+            android:layout_margin="10dp"
             android:background="@color/material_dynamic_neutral20"
             android:text="power off"
             android:textColor="@color/material_dynamic_primary60" />

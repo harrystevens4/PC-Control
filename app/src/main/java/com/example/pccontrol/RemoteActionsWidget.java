@@ -1,6 +1,9 @@
 package com.example.pccontrol;
 
 import static android.appwidget.AppWidgetManager.EXTRA_APPWIDGET_ID;
+import static android.content.Context.MODE_PRIVATE;
+import static android.view.View.GONE;
+import static android.view.View.VISIBLE;
 import static java.util.concurrent.Executors.newSingleThreadExecutor;
 
 import android.app.Notification;
@@ -8,11 +11,13 @@ import android.app.NotificationManager;
 import android.app.PendingIntent;
 import android.appwidget.AppWidgetManager;
 import android.appwidget.AppWidgetProvider;
+import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
 import android.util.Log;
 import android.widget.RemoteViews;
+import android.widget.TextView;
 
 import java.io.IOException;
 import java.io.InputStream;
@@ -40,7 +45,7 @@ public class RemoteActionsWidget extends AppWidgetProvider {
                                 int appWidgetId) {
         Log.d("RemoteActionsWidget","updateAppWidget id "+appWidgetId);
         // Construct the RemoteViews object
-        RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.remote_actions);
+        RemoteViews views = RemoteActionsWidget.buildRemoteViews(context);
 
         //set button callbacks
         Intent unlock_intent = new Intent(context, RemoteActionsWidget.class);
@@ -64,6 +69,7 @@ public class RemoteActionsWidget extends AppWidgetProvider {
     @Override
     public void onReceive(Context context, Intent intent){
         int app_widget_id = intent.getIntExtra(EXTRA_APPWIDGET_ID,0);
+        int[] allAppWidgetIds = AppWidgetManager.getInstance(context).getAppWidgetIds(new ComponentName(context.getApplicationContext(),RemoteActionsWidget.class));
         if (Objects.equals(intent.getAction(), "UNLOCK_ACTION")) {
             thread_pool.execute(new RemoteAction(context,0));
         }
@@ -72,7 +78,7 @@ public class RemoteActionsWidget extends AppWidgetProvider {
         }
         if (Objects.equals(intent.getAction(), "SHUTDOWN_ACTION")) {
             shutdown_button_confirmation_stage++;
-            RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.remote_actions);
+            RemoteViews views = buildRemoteViews(context);
             AppWidgetManager app_widget_manager = AppWidgetManager.getInstance(context);
             String[] confirmation_texts = {"confirm?","confirm!"};
             //schedule confirmation stage reset
@@ -81,7 +87,7 @@ public class RemoteActionsWidget extends AppWidgetProvider {
                     @Override public void run(){
                         shutdown_button_confirmation_stage = 0;
                         views.setTextViewText(R.id.powerOffButton, "shutdown");
-                        app_widget_manager.partiallyUpdateAppWidget(app_widget_id,views);
+                        app_widget_manager.updateAppWidget(allAppWidgetIds,views);
                     }
                 };
                 Timer timer = new Timer(true);
@@ -92,7 +98,7 @@ public class RemoteActionsWidget extends AppWidgetProvider {
                 Log.d("RemoteActionsWidget","power off confirmation stage "+shutdown_button_confirmation_stage);
                 //change text to next stage of confirmation
                 views.setTextViewText(R.id.powerOffButton, confirmation_texts[shutdown_button_confirmation_stage-1]);
-                app_widget_manager.partiallyUpdateAppWidget(app_widget_id,views);
+                app_widget_manager.updateAppWidget(allAppWidgetIds,views);
             }else {
                 Log.d("RemoteActionsWidget","power off requested");
                 //execute shutdown and reset label
@@ -100,15 +106,27 @@ public class RemoteActionsWidget extends AppWidgetProvider {
                 //reset text
                 shutdown_button_confirmation_stage = 0;
                 views.setTextViewText(R.id.powerOffButton, "shutdown");
-                app_widget_manager.partiallyUpdateAppWidget(app_widget_id,views);
+                app_widget_manager.updateAppWidget(allAppWidgetIds,views);
             }
         }
         super.onReceive(context,intent);
     }
 
+    public static RemoteViews buildRemoteViews(Context context){
+        RemoteViews views = new RemoteViews(context.getPackageName(), R.layout.remote_actions);
+
+        //configure ui
+        SharedPreferences remoteActionConfig = context.getSharedPreferences("remote_action_config",MODE_PRIVATE);
+        boolean showWidgetLabels = remoteActionConfig.getBoolean("showWidgetLabels",true);
+        views.setViewVisibility(R.id.lockingLabel,showWidgetLabels ? VISIBLE : GONE);
+        views.setViewVisibility(R.id.powerLabel,showWidgetLabels ? VISIBLE : GONE);
+        return views;
+    }
+
     @Override
     public void onUpdate(Context context, AppWidgetManager appWidgetManager, int[] appWidgetIds) {
         // There may be multiple widgets active, so update all of them
+        Log.d("RemoteActionsWidget","updating app widgets "+appWidgetIds);
         for (int appWidgetId : appWidgetIds) {
             updateAppWidget(context, appWidgetManager, appWidgetId);
         }
@@ -146,7 +164,7 @@ class RemoteAction implements Runnable {
     public void run() {
         Log.d("RemoteAction", "initiating remote connection");
         //====== get computer hostname and secret key ======
-        SharedPreferences remote_action_config = this.caller.getSharedPreferences("remote_action_config", Context.MODE_PRIVATE);
+        SharedPreferences remote_action_config = this.caller.getSharedPreferences("remote_action_config", MODE_PRIVATE);
         String computer_hostname = remote_action_config.getString("computer_hostname","");
         if (Objects.equals(computer_hostname,"")) {
             this.notify_error("computer hostname not set");
