@@ -181,14 +181,14 @@ class RemoteAction implements Runnable {
         OutputStream socket_output;
         InputStream socket_input;
         try {
-            socket = new Socket(computer_hostname, 19532);
+            socket = new Socket(QuickDiscover.discover(computer_hostname,"UNLOCKFPHONE"), 19532);
             socket_output = socket.getOutputStream();
             socket_input = socket.getInputStream();
-        } catch (UnknownHostException | ConnectException e) {
+        } catch (UnknownHostException e) {
             Log.e("RemoteAction", "Could not connect to host");
             this.notify_error("Couldn't connect to host "+computer_hostname);
             return;
-        } catch (IOException e) {
+        } catch (IOException e){
             throw new RuntimeException(e);
         }
         try {
