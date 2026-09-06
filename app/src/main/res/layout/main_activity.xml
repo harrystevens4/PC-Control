@@ -88,7 +88,7 @@
 
     <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent"
+        android:layout_height="wrap_content"
         android:orientation="vertical"
         android:paddingVertical="10dp">
 
@@ -107,6 +107,31 @@
             android:checked="false"
             android:text="Show widget labels"
             tools:checked="true" />
+    </LinearLayout>
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="3dp"
+        android:background="?android:attr/listDivider" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:paddingVertical="10dp"
+        android:orientation="vertical">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:textAppearance="@style/TextAppearance.AppCompat.Display1"
+            android:textColor="@color/material_dynamic_primary70"
+            android:textFontWeight="500"
+            android:text="SETTINGS" />
+        <com.google.android.material.materialswitch.MaterialSwitch
+            android:id="@+id/useMdnsFallbackSwitch"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:text="use mDNS as fallback"/>
     </LinearLayout>
 
 </LinearLayout>

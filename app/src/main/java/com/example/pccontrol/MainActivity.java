@@ -33,18 +33,15 @@ public class MainActivity extends Activity {
     @Override
     public void onCreate(Bundle saved_instance_state){
         super.onCreate(saved_instance_state);
-        //setup notification channel
-        NotificationChannel notification_channel = new NotificationChannel("ErrorChannel","Errors", NotificationManager.IMPORTANCE_HIGH);
-        notification_channel.enableVibration(true);
-        notification_channel.enableLights(true);
-        NotificationManager notification_manager = this.getSystemService(NotificationManager.class);
-        notification_manager.createNotificationChannel(notification_channel);
+        //setup notifications
+        Notifier.init(this);
         //retrieve config values
         SharedPreferences remoteActionConfig = this.getSharedPreferences("remote_action_config", Context.MODE_PRIVATE);
         SharedPreferences.Editor remoteActionConfigEditor = remoteActionConfig.edit();
         String computer_hostname = remoteActionConfig.getString("computer_hostname","");
         String secret_key = remoteActionConfig.getString("secret_key","");
         boolean showWidgetLabels = remoteActionConfig.getBoolean("showWidgetLabels",true);
+        boolean useMdnsFallback = remoteActionConfig.getBoolean("useMdnsFallback",true);
         //build ui
         DynamicColors.applyToActivitiesIfAvailable(this.getApplication());
         setContentView(R.layout.main_activity);
@@ -54,6 +51,9 @@ public class MainActivity extends Activity {
         secret_key_text_entry.setText(secret_key);
         MaterialSwitch showWidgetLabelsSwitch = findViewById(R.id.showLabelsSwitch);
         showWidgetLabelsSwitch.setChecked(showWidgetLabels);
+        MaterialSwitch useMdnsFallbackSwitch = findViewById(R.id.useMdnsFallbackSwitch);
+        useMdnsFallbackSwitch.setChecked(useMdnsFallback);
+
         //interactions
         Button computer_hostname_save_button = (Button)findViewById(R.id.computer_hostname_save_button);
         Button secret_key_save_button = (Button)findViewById(R.id.secret_key_save_button);
@@ -78,6 +78,9 @@ public class MainActivity extends Activity {
                 //redraw all widgets
                 redrawAllWidgets();
             }
+        });
+        useMdnsFallbackSwitch.setOnCheckedChangeListener((buttonView,isChecked) -> {
+            remoteActionConfigEditor.putBoolean("useMdnsFallback",isChecked).apply();
         });
     }
     public void redrawAllWidgets(){

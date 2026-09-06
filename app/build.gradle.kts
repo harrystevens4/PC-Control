@@ -50,6 +50,7 @@ dependencies {
     implementation(libs.androidx.ui.graphics)
     implementation(libs.androidx.ui.tooling.preview)
     implementation(libs.androidx.material3)
+    implementation(libs.androidx.work.runtime)
     implementation(libs.google.material)
     implementation(libs.material)
     implementation(libs.androidx.cardview)

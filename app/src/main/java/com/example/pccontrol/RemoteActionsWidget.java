@@ -15,6 +15,7 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.location.Address;
 import android.util.Log;
 import android.widget.RemoteViews;
 import android.widget.TextView;
@@ -23,12 +24,14 @@ import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
 import java.net.ConnectException;
+import java.net.InetAddress;
 import java.net.Socket;
 import java.net.SocketException;
 import java.net.UnknownHostException;
 import java.nio.ByteBuffer;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
+import java.time.Duration;
 import java.util.Base64;
 import java.util.Objects;
 import java.util.Timer;
@@ -150,16 +153,6 @@ class RemoteAction implements Runnable {
         this.caller = caller;
         this.action = action;
     }
-    private void notify_error(String message){
-        Notification.Builder notification_builder =  new Notification.Builder(this.caller,"ErrorChannel")
-                .setSmallIcon(R.mipmap.pccontrol_icon)
-                .setContentTitle("Error")
-                .setContentText(message)
-                .setVisibility(Notification.VISIBILITY_PUBLIC)
-                .setAutoCancel(true);
-        NotificationManager notification_manager = this.caller.getSystemService(NotificationManager.class);
-        notification_manager.notify(0,notification_builder.build());
-    }
     @Override
     public void run() {
         Log.d("RemoteAction", "initiating remote connection");
@@ -167,12 +160,12 @@ class RemoteAction implements Runnable {
         SharedPreferences remote_action_config = this.caller.getSharedPreferences("remote_action_config", MODE_PRIVATE);
         String computer_hostname = remote_action_config.getString("computer_hostname","");
         if (Objects.equals(computer_hostname,"")) {
-            this.notify_error("computer hostname not set");
+            Notifier.notifyError(caller,"computer hostname not set");
             return;
         }
         String secret_key_base64 = remote_action_config.getString("secret_key","");
         if (Objects.equals(secret_key_base64,"")) {
-            this.notify_error("secret key not set");
+            Notifier.notifyError(caller,"secret key not set");
             return;
         }
         byte[] secret_key = Base64.getDecoder().decode(secret_key_base64);
@@ -181,12 +174,24 @@ class RemoteAction implements Runnable {
         OutputStream socket_output;
         InputStream socket_input;
         try {
-            socket = new Socket(QuickDiscover.discover(computer_hostname,"UNLOCKFPHONE"), 19532);
+            InetAddress address;
+            try {
+                address = QuickDiscover.discover(computer_hostname,"UNLOCKFPHONE");
+            } catch (IOException e) {
+                SharedPreferences sharedPreferences = caller.getSharedPreferences("remote_action_config",MODE_PRIVATE);
+                if (sharedPreferences.getBoolean("useMdnsFallback",true)) {
+                    Log.d("RemoteActionsWidget","quick discover failed: falling back to mdns");
+                    address = java.net.InetAddress.getByName(computer_hostname + ".local");
+                }else {
+                    throw new UnknownHostException("no method for resolving hostname available");
+                }
+            }
+            socket = new Socket(address, 19532);
             socket_output = socket.getOutputStream();
             socket_input = socket.getInputStream();
         } catch (UnknownHostException e) {
             Log.e("RemoteAction", "Could not connect to host");
-            this.notify_error("Couldn't connect to host "+computer_hostname);
+            Notifier.notifyError(caller,"Couldn't connect to host "+computer_hostname);
             return;
         } catch (IOException e){
             throw new RuntimeException(e);
@@ -219,11 +224,11 @@ class RemoteAction implements Runnable {
                 } else {
                     text_status = "code " + status;
                 }
-                notify_error("Error performing action: " + text_status);
+                Notifier.notifyError(caller,"Error performing action: " + text_status);
             }
             //====== close socket ======
         } catch (SocketException e){
-            this.notify_error("Socket transport error: "+e.getMessage());
+            Notifier.notifyError(caller,"Socket transport error: "+e.getMessage());
             return;
         } catch (IOException e) {
             throw new RuntimeException(e);
@@ -236,5 +241,6 @@ class RemoteAction implements Runnable {
             } catch (IOException ignored){}
         }
         Log.d("RemoteAction", "remote unlock complete");
+        Notifier.notifyInfoForDuration(caller,"Request Status","remote action successful", Duration.ofSeconds(10));
     }
 }
