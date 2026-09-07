@@ -50,19 +50,6 @@ public class RemoteActionsWidget extends AppWidgetProvider {
         // Construct the RemoteViews object
         RemoteViews views = RemoteActionsWidget.buildRemoteViews(context);
 
-        //set button callbacks
-        Intent unlock_intent = new Intent(context, RemoteActionsWidget.class);
-        unlock_intent.setAction("UNLOCK_ACTION");
-        Intent lock_intent = new Intent(context, RemoteActionsWidget.class);
-        lock_intent.setAction("LOCK_ACTION");
-        Intent shutdown_intent = new Intent(context, RemoteActionsWidget.class);
-        shutdown_intent.setAction("SHUTDOWN_ACTION");
-        shutdown_intent.putExtra(EXTRA_APPWIDGET_ID,appWidgetId);
-
-        views.setOnClickPendingIntent(R.id.unlockButton,PendingIntent.getBroadcast(context,0,unlock_intent,PendingIntent.FLAG_IMMUTABLE));
-        views.setOnClickPendingIntent(R.id.lockButton,PendingIntent.getBroadcast(context,0,lock_intent,PendingIntent.FLAG_IMMUTABLE));
-        views.setOnClickPendingIntent(R.id.powerOffButton,PendingIntent.getBroadcast(context,0,shutdown_intent,PendingIntent.FLAG_IMMUTABLE));
-
         // Instruct the widget manager to update the widget
         appWidgetManager.updateAppWidget(appWidgetId, views);
 
@@ -71,7 +58,6 @@ public class RemoteActionsWidget extends AppWidgetProvider {
 
     @Override
     public void onReceive(Context context, Intent intent){
-        int app_widget_id = intent.getIntExtra(EXTRA_APPWIDGET_ID,0);
         int[] allAppWidgetIds = AppWidgetManager.getInstance(context).getAppWidgetIds(new ComponentName(context.getApplicationContext(),RemoteActionsWidget.class));
         if (Objects.equals(intent.getAction(), "UNLOCK_ACTION")) {
             thread_pool.execute(new RemoteAction(context,0));
@@ -123,6 +109,20 @@ public class RemoteActionsWidget extends AppWidgetProvider {
         boolean showWidgetLabels = remoteActionConfig.getBoolean("showWidgetLabels",true);
         views.setViewVisibility(R.id.lockingLabel,showWidgetLabels ? VISIBLE : GONE);
         views.setViewVisibility(R.id.powerLabel,showWidgetLabels ? VISIBLE : GONE);
+
+
+        //set button callbacks
+        Intent unlock_intent = new Intent(context, RemoteActionsWidget.class);
+        unlock_intent.setAction("UNLOCK_ACTION");
+        Intent lock_intent = new Intent(context, RemoteActionsWidget.class);
+        lock_intent.setAction("LOCK_ACTION");
+        Intent shutdown_intent = new Intent(context, RemoteActionsWidget.class);
+        shutdown_intent.setAction("SHUTDOWN_ACTION");
+
+        views.setOnClickPendingIntent(R.id.unlockButton,PendingIntent.getBroadcast(context,0,unlock_intent,PendingIntent.FLAG_IMMUTABLE));
+        views.setOnClickPendingIntent(R.id.lockButton,PendingIntent.getBroadcast(context,0,lock_intent,PendingIntent.FLAG_IMMUTABLE));
+        views.setOnClickPendingIntent(R.id.powerOffButton,PendingIntent.getBroadcast(context,0,shutdown_intent,PendingIntent.FLAG_IMMUTABLE));
+
         return views;
     }
 

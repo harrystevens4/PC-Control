@@ -5,6 +5,7 @@ import static android.appwidget.AppWidgetManager.EXTRA_APPWIDGET_ID;
 import static android.appwidget.AppWidgetManager.EXTRA_APPWIDGET_IDS;
 import static android.view.View.GONE;
 import static android.view.View.VISIBLE;
+import static android.view.ViewGroup.LayoutParams.WRAP_CONTENT;
 
 import android.app.Activity;
 import android.app.Application;
@@ -15,11 +16,18 @@ import android.content.ComponentName;
 import android.content.Context;
 import android.content.Intent;
 import android.content.SharedPreferences;
+import android.content.res.Resources;
 import android.os.Bundle;
+import android.text.Layout;
+import android.util.AttributeSet;
+import android.util.Log;
 import android.view.View;
+import android.view.ViewGroup;
 import android.widget.Button;
 import android.widget.CompoundButton;
 import android.widget.EditText;
+import android.widget.LinearLayout;
+import android.widget.RemoteViews;
 import android.widget.Switch;
 import android.widget.TextView;
 
@@ -54,6 +62,9 @@ public class MainActivity extends Activity {
         MaterialSwitch useMdnsFallbackSwitch = findViewById(R.id.useMdnsFallbackSwitch);
         useMdnsFallbackSwitch.setChecked(useMdnsFallback);
 
+        //draw in app widget so user can see when they change settings
+        drawInAppWidget();
+
         //interactions
         Button computer_hostname_save_button = (Button)findViewById(R.id.computer_hostname_save_button);
         Button secret_key_save_button = (Button)findViewById(R.id.secret_key_save_button);
@@ -84,10 +95,27 @@ public class MainActivity extends Activity {
         });
     }
     public void redrawAllWidgets(){
+        //redraw actual widgets
         Intent updateRemoteActionsWidgetIntent = new Intent(getApplicationContext(), RemoteActionsWidget.class);
         int[] appWidgetIds = AppWidgetManager.getInstance(this).getAppWidgetIds(new ComponentName(this,RemoteActionsWidget.class));
         updateRemoteActionsWidgetIntent.setAction(ACTION_APPWIDGET_UPDATE);
         updateRemoteActionsWidgetIntent.putExtra(EXTRA_APPWIDGET_IDS,appWidgetIds);
         sendBroadcast(updateRemoteActionsWidgetIntent);
+        //also redraw the in app widget
+        drawInAppWidget();
+    }
+
+    public void drawInAppWidget(){
+        //expand remote views
+        LinearLayout inAppWidgetLayout = findViewById(R.id.inAppWidgetLayout);
+        RemoteViews appWidgetRemoteViews = RemoteActionsWidget.buildRemoteViews(this);
+        View appWidget = appWidgetRemoteViews.apply(this,inAppWidgetLayout);
+        inAppWidgetLayout.removeAllViews(); //when redrawing make sure old widget is gone
+        inAppWidgetLayout.addView(appWidget);
+        //otherwise widget will take up whole application
+        LinearLayout rootLayout = findViewById(R.id.remoteActionsWidgetRootLayout);
+        android.view.ViewGroup.LayoutParams layoutParams = rootLayout.getLayoutParams();
+        layoutParams.height = WRAP_CONTENT;
+        rootLayout.setLayoutParams(layoutParams);
     }
 }
