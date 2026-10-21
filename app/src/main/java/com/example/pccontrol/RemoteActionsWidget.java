@@ -20,6 +20,10 @@ import android.util.Log;
 import android.widget.RemoteViews;
 import android.widget.TextView;
 
+import androidx.work.Data;
+import androidx.work.OneTimeWorkRequest;
+import androidx.work.WorkManager;
+
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
@@ -55,15 +59,24 @@ public class RemoteActionsWidget extends AppWidgetProvider {
 
         Log.d("INFO","registered handler for on click");
     }
-
+    private static OneTimeWorkRequest remoteActionWorkerFactory(int action) {
+        Data workRequestInputData = new Data.Builder()
+                .putInt("action",action)
+                .build();
+        OneTimeWorkRequest workRequest = new OneTimeWorkRequest.Builder(RemoteActionWorker.class)
+                .setInputData(workRequestInputData)
+                .build();
+        return workRequest;
+    }
     @Override
     public void onReceive(Context context, Intent intent){
+        WorkManager workManager = WorkManager.getInstance(context);
         int[] allAppWidgetIds = AppWidgetManager.getInstance(context).getAppWidgetIds(new ComponentName(context.getApplicationContext(),RemoteActionsWidget.class));
         if (Objects.equals(intent.getAction(), "UNLOCK_ACTION")) {
-            thread_pool.execute(new RemoteAction(context,0));
+            workManager.enqueue(remoteActionWorkerFactory(0));
         }
         if (Objects.equals(intent.getAction(), "LOCK_ACTION")) {
-            thread_pool.execute(new RemoteAction(context,1));
+            workManager.enqueue(remoteActionWorkerFactory(1));
         }
         if (Objects.equals(intent.getAction(), "SHUTDOWN_ACTION")) {
             shutdown_button_confirmation_stage++;
@@ -91,7 +104,7 @@ public class RemoteActionsWidget extends AppWidgetProvider {
             }else {
                 Log.d("RemoteActionsWidget","power off requested");
                 //execute shutdown and reset label
-                thread_pool.execute(new RemoteAction(context,2));
+                workManager.enqueue(remoteActionWorkerFactory(2));
                 //reset text
                 shutdown_button_confirmation_stage = 0;
                 views.setTextViewText(R.id.powerOffButton, "shutdown");
@@ -143,104 +156,5 @@ public class RemoteActionsWidget extends AppWidgetProvider {
     @Override
     public void onDisabled(Context context) {
         // Enter relevant functionality for when the last widget is disabled
-    }
-}
-
-class RemoteAction implements Runnable {
-    private Context caller = null;
-    private int action = 0;
-    public RemoteAction(Context caller,int action){
-        this.caller = caller;
-        this.action = action;
-    }
-    @Override
-    public void run() {
-        Log.d("RemoteAction", "initiating remote connection");
-        //====== get computer hostname and secret key ======
-        SharedPreferences remote_action_config = this.caller.getSharedPreferences("remote_action_config", MODE_PRIVATE);
-        String computer_hostname = remote_action_config.getString("computer_hostname","");
-        if (Objects.equals(computer_hostname,"")) {
-            Notifier.notifyError(caller,"computer hostname not set");
-            return;
-        }
-        String secret_key_base64 = remote_action_config.getString("secret_key","");
-        if (Objects.equals(secret_key_base64,"")) {
-            Notifier.notifyError(caller,"secret key not set");
-            return;
-        }
-        byte[] secret_key = Base64.getDecoder().decode(secret_key_base64);
-        //====== open socket ======
-        Socket socket;
-        OutputStream socket_output;
-        InputStream socket_input;
-        try {
-            InetAddress address;
-            try {
-                address = QuickDiscover.discover(computer_hostname,"UNLOCKFPHONE");
-            } catch (IOException e) {
-                SharedPreferences sharedPreferences = caller.getSharedPreferences("remote_action_config",MODE_PRIVATE);
-                if (sharedPreferences.getBoolean("useMdnsFallback",true)) {
-                    Log.d("RemoteActionsWidget","quick discover failed: falling back to mdns");
-                    address = java.net.InetAddress.getByName(computer_hostname + ".local");
-                }else {
-                    throw new UnknownHostException("no method for resolving hostname available");
-                }
-            }
-            socket = new Socket(address, 19532);
-            socket_output = socket.getOutputStream();
-            socket_input = socket.getInputStream();
-        } catch (UnknownHostException e) {
-            Log.e("RemoteAction", "Could not connect to host");
-            Notifier.notifyError(caller,"Couldn't connect to host "+computer_hostname);
-            return;
-        } catch (IOException e){
-            throw new RuntimeException(e);
-        }
-        try {
-            ByteBuffer buffer = ByteBuffer.allocate(64);
-            //====== auth_request ======
-            buffer.putLong(this.action);
-            socket_output.write(buffer.array(), 0, 8);
-            //====== auth_challenge ======
-            socket_input.read(buffer.array(), 0, 64);
-            //====== auth_response ======
-            ByteBuffer bytes_to_digest = ByteBuffer.allocate(64 + secret_key.length);
-            bytes_to_digest.put(buffer.array(), 0, 64);
-            bytes_to_digest.put(secret_key);
-            MessageDigest md = MessageDigest.getInstance("sha256");
-            byte[] digest = md.digest(bytes_to_digest.array());
-            socket_output.write(digest);
-            //====== request_status ======
-            byte[] status_buffer = {0};
-            socket_input.read(status_buffer, 0, 1);
-            int status = Byte.toUnsignedInt(status_buffer[0]);
-            Log.d("RemoteAction", "status returned of " + status);
-            if (status != 0) {
-                String text_status = "";
-                if (status == 1) {
-                    text_status = "authentication failed";
-                } else if (status == 2){
-                    text_status = "command not implemented";
-                } else {
-                    text_status = "code " + status;
-                }
-                Notifier.notifyError(caller,"Error performing action: " + text_status);
-            }
-            //====== close socket ======
-        } catch (SocketException e){
-            Notifier.notifyError(caller,"Socket transport error: "+e.getMessage());
-            return;
-        } catch (IOException e) {
-            throw new RuntimeException(e);
-        } catch (NoSuchAlgorithmException ignored){
-            Log.e("RemoteAction","sha256 not available");
-            return;
-        } finally {
-            try {
-                socket.close();
-            } catch (IOException ignored){}
-        }
-        Log.d("RemoteAction", "remote unlock complete");
-        Notifier.notifyInfoForDuration(caller,"Request Status","remote action successful", Duration.ofSeconds(10));
     }
 }

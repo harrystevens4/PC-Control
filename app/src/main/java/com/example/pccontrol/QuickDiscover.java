@@ -10,6 +10,7 @@ import java.net.Inet4Address;
 import java.net.InetAddress;
 import java.net.SocketTimeoutException;
 import java.net.UnknownHostException;
+import java.util.concurrent.TimeUnit;
 
 public class QuickDiscover {
     static int HOSTNAME_MAX_LEN = 254;
@@ -38,6 +39,12 @@ public class QuickDiscover {
             if (service != null){
                 byte[] serviceBytes = service.getBytes();
                 System.arraycopy(serviceBytes, 0, discoverPacketByteBuffer, HOSTNAME_MAX_LEN+1, Math.min(service.length(), SERVICE_LEN));
+            }
+            try {
+                //chill for a couple millis
+                TimeUnit.MILLISECONDS.sleep(10);
+            } catch (InterruptedException ignored) {
+
             }
             //send
             socket.send(discoverPacket);
